@@ -1,7 +1,8 @@
+import { OrbitControls } from "@react-three/drei";
 import { Canvas, MeshProps, useFrame } from "@react-three/fiber";
-import "./App.css";
 import { useRef, useState } from "react";
 import { Mesh } from "three";
+import { EditableTexturePlane } from "./components/TextureEditor";
 
 function Box(props: MeshProps) {
   // This reference will give us direct access to the mesh
@@ -29,21 +30,28 @@ function Box(props: MeshProps) {
 
 function App() {
   return (
-    <div>
+    <div className="flex flex-col items-center gap-2">
       <h1 className="text-3xl underline">Hello world!</h1>
-      <Canvas>
-        <ambientLight intensity={Math.PI / 2} />
-        <spotLight
-          position={[10, 10, 10]}
-          angle={0.15}
-          penumbra={1}
-          decay={0}
-          intensity={Math.PI}
-        />
-        <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
-        <Box position={[-1.2, 0, 0]} />
-        <Box position={[1.2, 0, 0]} />
-      </Canvas>
+      <EditableTexturePlane />
+      <div className="h-96 w-96 bg-white">
+        <Canvas>
+          <ambientLight intensity={Math.PI / 2} />
+          <spotLight
+            position={[10, 10, 10]}
+            angle={0.15}
+            penumbra={1}
+            decay={0}
+            intensity={Math.PI}
+          />
+          <pointLight
+            position={[-10, -10, -10]}
+            decay={0}
+            intensity={Math.PI}
+          />
+          <Box />
+          <OrbitControls autoRotate />
+        </Canvas>
+      </div>
     </div>
   );
 }
