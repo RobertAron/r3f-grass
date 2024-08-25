@@ -12,7 +12,6 @@ varying vec4 vColor;  // Varying variable to pass color to fragment shader
 
 void main() {
   // Calculate UV based on instanceIndex
-  // scaled from 0-1
   float x = mod(instanceIndex, textureWidth) / textureWidth;
   float y = floor(instanceIndex / textureWidth) / textureHeight;
   vec2 uv = vec2(x, y);
@@ -21,10 +20,18 @@ void main() {
   vec4 texData = texture2D(textureData, uv);
   vColor = texData;
 
-  // Use the texture data to offset the position
+  // Extract the RGB components for scaling factors
+  float scaleX = texData.r * 2.5 + 1.0;
+  float scaleY = texData.g * 2.5 + 1.0;
+  float scaleZ = texData.b * 2.5 + 1.0;
+
+  // Apply scaling based on the RGB values
   vec3 transformed = position;
-  transformed.x += x*textureWidth-(textureWidth/2.0);
-  transformed.y += y*textureHeight-(textureHeight/2.0);
+  transformed *= vec3(scaleX,scaleY,scaleZ);
+
+  // Offset the position based on instance index
+  transformed.x += x * textureWidth - (textureWidth / 2.0);
+  transformed.y += y * textureHeight - (textureHeight / 2.0);
 
   // Usual model-view-projection calculations
   vec4 mvPosition = modelViewMatrix * vec4(transformed, 1.0);
