@@ -1,4 +1,4 @@
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, Plane } from "@react-three/drei";
 import { ThreeEvent } from "@react-three/fiber";
 import { useRef, useState } from "react";
 import * as THREE from "three";
@@ -6,16 +6,16 @@ import { CanvasBase } from "./CanvasBase";
 import { InstancedThing } from "./InstancedBoxesReadColors";
 import { RGB, RGBTHing } from "./RgbColorPicker";
 
-const xMax = 10;
-const yMax = 10;
+const xMax = 30;
+const yMax = 30;
 const size = xMax * yMax;
+const initColor = new THREE.Color(0xaaffaa);
 export function EditableTexturePlane() {
   const [texture] = useState<THREE.DataTexture>(() => {
     const data = new Uint8Array(4 * size);
-    const color = new THREE.Color(0xffffff);
-    const r = Math.floor(color.r * 255);
-    const g = Math.floor(color.g * 255);
-    const b = Math.floor(color.b * 255);
+    const r = initColor.r * 255;
+    const g = initColor.g * 255;
+    const b = initColor.b * 255;
 
     for (let i = 0; i < size; i++) {
       const stride = i * 4;
@@ -31,7 +31,11 @@ export function EditableTexturePlane() {
   });
   const lastEdited = useRef<{ x: number; y: number } | null>(null);
 
-  const [color, setColor] = useState<RGB>("red");
+  const [color, setColor] = useState<RGB>({
+    r: initColor.r,
+    g: initColor.g,
+    b: initColor.b,
+  });
   const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     // uv goes 0-1
@@ -40,12 +44,12 @@ export function EditableTexturePlane() {
     const y = Math.floor(uv.y * yMax); // No inversion of y here
     if (lastEdited.current?.x === x && lastEdited.current?.y === y) return;
     // Calculate the texture index without needing to flip
-    const textureIndex = x * 4 + y * 4 * 10;
+    const textureIndex = x * 4 + y * 4 * xMax;
 
     const data = texture.image.data;
-    data[textureIndex] = color === "red" ? 255 : 0;
-    data[textureIndex + 1] = color === "green" ? 255 : 0;
-    data[textureIndex + 2] = color === "blue" ? 255 : 0;
+    data[textureIndex] = color.r * 255;
+    data[textureIndex + 1] = color.g * 255;
+    data[textureIndex + 2] = color.b * 255;
     data[textureIndex + 3] = 255;
     lastEdited.current = { x, y };
 
@@ -69,7 +73,9 @@ export function EditableTexturePlane() {
         </mesh>
       </CanvasBase>
       <CanvasBase>
+        <OrbitControls />
         <InstancedThing texture={texture} />
+        <Plane args={[xMax, yMax]} rotation={[-Math.PI / 2, 0, 0]} />
       </CanvasBase>
     </>
   );

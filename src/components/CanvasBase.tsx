@@ -1,4 +1,4 @@
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import React from "react";
 
 export function CanvasBase({ children }: { children?: React.ReactNode }) {
