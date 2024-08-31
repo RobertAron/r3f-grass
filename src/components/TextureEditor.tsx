@@ -5,9 +5,10 @@ import * as THREE from "three";
 import { CanvasBase } from "./CanvasBase";
 import { InstancedThing } from "./InstancedBoxesReadColors";
 import { RGB, RGBTHing } from "./RgbColorPicker";
+import { NoiseViewer } from "./NoiseTexture";
 
-const xMax = 30;
-const yMax = 30;
+const xMax = 50;
+const yMax = 50;
 const size = xMax * yMax;
 const initColor = new THREE.Color(0xaaffaa);
 export function EditableTexturePlane() {
@@ -76,6 +77,10 @@ export function EditableTexturePlane() {
         <OrbitControls />
         <InstancedThing texture={texture} />
         <Plane args={[xMax, yMax]} rotation={[-Math.PI / 2, 0, 0]} />
+      </CanvasBase>
+      <CanvasBase>
+        <OrbitControls autoRotate />
+        <NoiseViewer />
       </CanvasBase>
     </>
   );

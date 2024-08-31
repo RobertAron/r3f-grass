@@ -1,11 +1,12 @@
-import { MeshProps, useFrame } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 const vertexShader = /*glsl*/ `
 attribute float instanceIndex;
 uniform sampler2D textureData;
 uniform float textureWidth;
 uniform float textureHeight;
+varying vec3 vNormal;
+varying vec3 vViewDir;
 
 varying vec4 vColor;
 
@@ -20,9 +21,9 @@ void main() {
   vColor = texData;
 
   // Extract the RGB components for scaling factors
-  float scaleX = texData.r * 5.0;
-  float scaleY = texData.g * 5.0;
-  float scaleZ = texData.b * 5.0;
+  float scaleX = 1.0;//texData.r * 5.0;
+  float scaleY = 1.0;//texData.g * 5.0;
+  float scaleZ = 1.0;//texData.b * 5.0;
 
   // Apply scaling based on the RGB values
   vec3 transformed = position;
@@ -35,8 +36,12 @@ void main() {
 
   // Usual model-view-projection calculations
   vec4 mvPosition = modelViewMatrix * vec4(transformed, 1.0);
+  vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+  vec4 viewPosition = viewMatrix * modelPosition;
+  vec4 clipPosition = projectionMatrix * viewPosition;
   gl_Position = projectionMatrix * mvPosition;
-  vNormal = normalize( normalMatrix * normal );
+  vViewDir = normalize(-viewPosition.xyz);
+  vNormal = normalize(normalMatrix * normal);
 }
 `;
 
@@ -44,37 +49,43 @@ void main() {
 // https://www.maya-ndljk.com/blog/threejs-basic-toon-shader
 // Fragment Shader (simple pass-through)
 const fragmentShader = /*glsl*/ `
+// https://github.com/mrdoob/three.js/blob/dev/src/renderers/shaders/ShaderChunk/lights_pars_begin.glsl.js
+#include <common>
+#include <lights_pars_begin>
 
-varying vec4 vColor;  // Receive the color from the vertex shader
+uniform vec3 uColor;
+uniform float uGlossiness;
+
+varying vec3 vNormal;
+varying vec3 vViewDir;
 
 void main() {
-  gl_FragColor = vColor;
+  float NdotL = dot(vNormal, directionalLights[0].direction);
+  float lightIntensity = smoothstep(0.0, 0.01, NdotL);
+  vec3 directionalLight = directionalLights[0].color * lightIntensity;
+
+  // specular reflection
+  vec3 halfVector = normalize(directionalLights[0].direction + vViewDir);
+  float NdotH = dot(vNormal, halfVector);
+
+  float specularIntensity = pow(NdotH * lightIntensity, 1000.0 / uGlossiness);
+  float specularIntensitySmooth = smoothstep(0.05, 0.1, specularIntensity);
+
+  vec3 specular = specularIntensitySmooth * directionalLights[0].color;
+
+  // rim lighting
+  float rimDot = 1.0 - dot(vViewDir, vNormal);
+  float rimAmount = 0.3;
+
+  float rimThreshold = 0.002;
+  float rimIntensity = rimDot * pow(NdotL, rimThreshold);
+  rimIntensity = smoothstep(rimAmount - 0.01, rimAmount + 0.01, rimIntensity);
+
+  vec3 rim = rimIntensity * directionalLights[0].color;
+
+  gl_FragColor = vec4(uColor * (directionalLight + ambientLightColor + specular + rim), 1.0);
 }
 `;
-
-function Box(props: MeshProps) {
-  // This reference will give us direct access to the mesh
-  const meshRef = useRef<THREE.Mesh>(null!);
-  // Set up state for the hovered and active state
-  const [hovered, setHover] = useState(false);
-  const [active, setActive] = useState(false);
-  // Subscribe this component to the render-loop, rotate the mesh every frame
-  useFrame((_state, delta) => (meshRef.current.rotation.x += delta));
-  // Return view, these are regular three.js elements expressed in JSX
-  return (
-    <mesh
-      {...props}
-      ref={meshRef}
-      scale={active ? 1.5 : 1}
-      onClick={(_event) => setActive(!active)}
-      onPointerOver={(_event) => setHover(true)}
-      onPointerOut={(_event) => setHover(false)}
-    >
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={hovered ? "hotpink" : "orange"} />
-    </mesh>
-  );
-}
 
 export function InstancedThing({ texture }: { texture: THREE.DataTexture }) {
   const count = texture.image.width * texture.image.height;
@@ -97,7 +108,11 @@ export function InstancedThing({ texture }: { texture: THREE.DataTexture }) {
     return new THREE.ShaderMaterial({
       vertexShader,
       fragmentShader,
+      lights: true,
       uniforms: {
+        ...THREE.UniformsLib.lights,
+        uColor: { value: new THREE.Color("#6495ED") },
+        uGlossiness: { value: 1 },
         textureData: { value: texture },
         textureWidth: { value: texture.image.width },
         textureHeight: { value: texture.image.height },
@@ -106,11 +121,15 @@ export function InstancedThing({ texture }: { texture: THREE.DataTexture }) {
   }, [texture]);
   return (
     <>
-      <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
-        <boxGeometry args={[0.3, 1, 0.3]}></boxGeometry>
+      <instancedMesh
+        ref={meshRef}
+        args={[undefined, undefined, count]}
+        castShadow
+      >
+        <cylinderGeometry args={[0.1, 0.5, 5, 10, 10]} />
+        {/* [radiusTop?: number | undefined, radiusBottom?: number | undefined, height?: number | undefined, radialSegments?: number | undefined, heightSegments?: number | undefined, openEnded?: boolean | undefined, thetaStart?: number | undefined, thetaLength?: number | undefined] */}
         <primitive object={shaderMaterial} attach="material" />
       </instancedMesh>
-      <Box />
     </>
   );
 }
