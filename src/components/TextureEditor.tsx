@@ -1,4 +1,4 @@
-import { OrbitControls, Plane } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import { ThreeEvent } from "@react-three/fiber";
 import { useRef, useState } from "react";
 import * as THREE from "three";
@@ -7,19 +7,23 @@ import { InstancedThing } from "./InstancedBoxesReadColors";
 import { RGB, RGBTHing } from "./RgbColorPicker";
 import { NoiseViewer } from "./NoiseTexture";
 import { InstancedThing2 } from "./InstancedGrassWithWInd";
+import { useLoader } from "@react-three/fiber";
+import wall from "./wall.jpg";
 
 const xMax = 50;
 const yMax = 50;
 const size = xMax * yMax;
 const initColor = new THREE.Color(0xaaffaa);
-const planeMaterial = new THREE.MeshPhongMaterial({ color: "green" });
-const PlaneDefault = () => (
-  <Plane
-    args={[xMax, yMax]}
-    rotation={[-Math.PI / 2, 0, 0]}
-    material={planeMaterial}
-  />
-);
+const PlaneDefault = () => {
+  const colorMap = useLoader(THREE.TextureLoader, wall);
+  const planeMaterial = new THREE.MeshStandardMaterial({});
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} material={planeMaterial}>
+      <meshStandardMaterial map={colorMap} />
+      <planeGeometry args={[xMax * 2, yMax * 2, 20, 20]} />
+    </mesh>
+  );
+};
 
 export function EditableTexturePlane() {
   const [texture] = useState<THREE.DataTexture>(() => {
