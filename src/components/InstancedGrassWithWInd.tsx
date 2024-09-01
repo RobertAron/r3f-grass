@@ -160,10 +160,11 @@ export function InstancedThing2({ texture }: { texture: THREE.DataTexture }) {
 
   const phongMaterial = useMemo(() => {
     const material = new THREE.MeshPhongMaterial({
-      color: 0x6495ed,
+      color: 'green',
     });
 
     material.onBeforeCompile = (shader) => {
+      console.log(shader.vertexShader)
       shaderRef.current = shader;
       shader.vertexShader = /*glsl */`
       attribute float instanceIndex;

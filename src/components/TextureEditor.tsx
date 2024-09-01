@@ -12,6 +12,15 @@ const xMax = 50;
 const yMax = 50;
 const size = xMax * yMax;
 const initColor = new THREE.Color(0xaaffaa);
+const planeMaterial = new THREE.MeshPhongMaterial({ color: "green" });
+const PlaneDefault = () => (
+  <Plane
+    args={[xMax, yMax]}
+    rotation={[-Math.PI / 2, 0, 0]}
+    material={planeMaterial}
+  />
+);
+
 export function EditableTexturePlane() {
   const [texture] = useState<THREE.DataTexture>(() => {
     const data = new Uint8Array(4 * size);
@@ -77,16 +86,17 @@ export function EditableTexturePlane() {
       <CanvasBase>
         <OrbitControls />
         <InstancedThing texture={texture} />
-        <Plane args={[xMax, yMax]} rotation={[-Math.PI / 2, 0, 0]} />
+        <PlaneDefault />
       </CanvasBase>
       <CanvasBase>
         <OrbitControls autoRotate />
         <NoiseViewer />
+        <PlaneDefault />
       </CanvasBase>
       <CanvasBase>
         <OrbitControls />
         <InstancedThing2 texture={texture} />
-        <Plane args={[xMax, yMax]} rotation={[-Math.PI / 2, 0, 0]} />
+        <PlaneDefault />
       </CanvasBase>
     </>
   );
