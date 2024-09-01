@@ -77,8 +77,7 @@ export function NoiseViewer() {
     [],
   );
   useFrame(({ clock }) => {
-    shaderMaterial.uniforms.u_time.value = clock.getElapsedTime();
-    shaderMaterial.needsUpdate = true;
+    shaderMaterial.uniforms.u_time.value = clock.getElapsedTime() * 5;
   });
   return (
     <mesh material={shaderMaterial}>

@@ -6,6 +6,7 @@ import { CanvasBase } from "./CanvasBase";
 import { InstancedThing } from "./InstancedBoxesReadColors";
 import { RGB, RGBTHing } from "./RgbColorPicker";
 import { NoiseViewer } from "./NoiseTexture";
+import { InstancedThing2 } from "./InstancedGrassWithWInd";
 
 const xMax = 50;
 const yMax = 50;
@@ -81,6 +82,11 @@ export function EditableTexturePlane() {
       <CanvasBase>
         <OrbitControls autoRotate />
         <NoiseViewer />
+      </CanvasBase>
+      <CanvasBase>
+        <OrbitControls />
+        <InstancedThing2 texture={texture} />
+        <Plane args={[xMax, yMax]} rotation={[-Math.PI / 2, 0, 0]} />
       </CanvasBase>
     </>
   );

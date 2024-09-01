@@ -9,7 +9,7 @@ export function CanvasBase({ children }: { children?: React.ReactNode }) {
         style={{ background: "#000000" }}
         camera={{ near: 0.001, far: 10000 }}
       >
-        <ambientLight intensity={.1} color={"white"} />
+        <ambientLight intensity={1} color={"green"} />
         {/* <spotLight
           position={[10, 10, 10]}
           angle={0.15}
@@ -21,7 +21,17 @@ export function CanvasBase({ children }: { children?: React.ReactNode }) {
         <directionalLight
           color={"#005F00"}
           intensity={10}
-          position={[30, 30, 30]}
+          position={[1,1,1]}
+        />
+        <directionalLight
+          color={"#5f005f"}
+          intensity={10}
+          position={[1, 1, 0]}
+        />
+        <directionalLight
+          color={"#5f005f"}
+          intensity={10}
+          position={[1, 1, 0]}
         />
         {children}
       </Canvas>
