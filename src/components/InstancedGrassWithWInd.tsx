@@ -2,6 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import grassVert from "./grass_vert.glsl";
+import { useGLTF } from "@react-three/drei";
 
 export function InstancedThing2({ texture }: { texture: THREE.DataTexture }) {
   const count = texture.image.width * texture.image.height;
@@ -12,6 +13,13 @@ export function InstancedThing2({ texture }: { texture: THREE.DataTexture }) {
     () => new Float32Array(count).map((_, index) => index),
     [count],
   );
+  const { nodes } = useGLTF("/grassblade.glb");
+  const geometry = useMemo(() => {
+    const sphere = nodes.Sphere;
+    if (sphere === undefined) return null;
+    if ("geometry" in sphere) return sphere.geometry as THREE.BufferGeometry;
+    return null;
+  }, [nodes]);
 
   useEffect(() => {
     if (meshRef.current === null) return;
@@ -27,12 +35,10 @@ export function InstancedThing2({ texture }: { texture: THREE.DataTexture }) {
     const material = new THREE.MeshStandardMaterial({
       color: 0x228b22, // Grass-like green color
       emissive: 0x1a682e, // Dark green emissive color to simulate light passing through
-      emissiveIntensity:.1,
+      emissiveIntensity: 0.1,
       roughness: 0.1, // Rougher surface to match the texture of grass
       metalness: 0, // No metalness for organic material
-      // transparent: true, // Enable transparency
-      
-      opacity: 0.95, // Slightly transparent to allow light to pass through
+      flatShading: false,
     });
 
     material.onBeforeCompile = (shader) => {
@@ -56,13 +62,12 @@ export function InstancedThing2({ texture }: { texture: THREE.DataTexture }) {
   return (
     <>
       <instancedMesh
+        frustumCulled={false}
         ref={meshRef}
-        args={[undefined, undefined, count]}
+        args={[geometry === null ? undefined : geometry, undefined, count]}
         material={phongMaterial}
-        position={[0, 2.5, 0]}
-      >
-        <cylinderGeometry args={[1, 1, 5, 30, 30]} />
-      </instancedMesh>
+        position={[0, 0, 0]}
+      />
     </>
   );
 }

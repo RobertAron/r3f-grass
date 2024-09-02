@@ -38,6 +38,10 @@ float noise(in vec2 st) {
     (d - b) * u.x * u.y;
 }
 
+float remap(float inputValue, float inputMin, float inputMax, float outputMin, float outputMax) {
+  return outputMin + (inputValue - inputMin) * (outputMax - outputMin) / (inputMax - inputMin);
+}
+
 void main() {
     // Calculate UV based on instanceIndex
   float x = mod(instanceIndex, textureWidth) / textureWidth;
@@ -45,29 +49,24 @@ void main() {
   vec2 uv = vec2(x, y);
   vec2 pos = vec2(x, y) * 5.0;
 
-
   // Time-dependent distortion
   vec2 timeDistortion = vec2(noise(pos + vec2(uTime * 0.3, uTime * 0.5)), noise(pos + vec2(uTime * 0.6, uTime * 0.4))) * 0.5;  // Small distortion factor
   pos += timeDistortion;
 
   float n = noise(pos) - 0.5;
   vec4 texData = texture2D(textureData, uv);
-  vColor = texData;
-
-  float yCentered = position.y + 2.5;
-  float scaleX = (1.0 - (yCentered / 5.0)) * 1.0;
-  float scaleY = 1.0;
-  float scaleZ = (1.0 - (yCentered / 5.0)) * 1.0;
+  // vColor = texData;
 
   vec3 transformed = position;
-  transformed *= vec3(scaleX, scaleY, scaleZ);
 
-  transformed.x += x * textureWidth - (textureWidth / 2.0);
-  transformed.y += scaleY / 2.0;
-  transformed.z += y * textureHeight - (textureHeight / 2.0);
+  // offset based on texture position
+  float xOffset = remap(x, 0.0, 1.0, -4.0, 4.0);
+  float zOffset = remap(y, 0.0, 1.0, -4.0, 4.0);
+  transformed.x += xOffset;
+  transformed.z += zOffset;
 
-  transformed.x += yCentered * n;
-  transformed.z += yCentered * n;
+  transformed.x += transformed.y * n;
+  transformed.z += transformed.y * n;
 
   // Standard vertex shader processing
   #include <uv_vertex>
